@@ -5,7 +5,6 @@ using UnityEngine;
 public class Guide : MonoBehaviour {
 
     public Vector3 centerPos;
-    public Vector3 averageVeloctiy;
     public int count=10;
     public Fish fishPrefab;
 
@@ -53,14 +52,11 @@ public class Guide : MonoBehaviour {
     void FixedUpdate () {
 
         Vector3 tempCeterPos = Vector3.zero;
-        Vector3 tempAverageVeloctiy = Vector3.zero;
         for(int i = 0; i < count; i++)
         {
             Fish fish = list[i];
             tempCeterPos += fish.transform.position;
-            tempAverageVeloctiy += fish.nowVelocity;
         }
         centerPos = tempCeterPos / count;
-        averageVeloctiy = tempAverageVeloctiy / count;
     }
 }

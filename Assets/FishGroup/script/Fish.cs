@@ -16,7 +16,6 @@ public class Fish : MonoBehaviour {
     static float seperateStrength = 5.0f;
 
     static float guideStrength = 10;
-    static float alignmentStrength = 1.0f;
     public Guide guide;
     public Renderer render;
     public Material materail;
@@ -46,8 +45,6 @@ public class Fish : MonoBehaviour {
             cohesionStrengthScale = Mathf.Pow(cohesionStrengthScale, 5);
 
         cohesionVec = cohesionVec * (cohesionStrengthScale / D);
-
-        Vector3 alignment = guide.averageVeloctiy-nowVelocity;
 
         int layerMask = 1<<8;
         int overlapCount = Physics.OverlapSphereNonAlloc(transform.position, findingGravitySensorR, gs, layerMask);
@@ -79,7 +76,6 @@ public class Fish : MonoBehaviour {
         nowVelocity =
             randomVec                        //亂數
             + guideStrength* followTarget    //況目標前進
-            //+ alignmentStrength*alignment   //感覺作用不大  
             + cohesionStrength * cohesionVec //集中
             + seperateStrength * seperateVec;//分開
  
