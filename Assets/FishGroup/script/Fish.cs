@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class Fish : MonoBehaviour {
 
-    static float velocityScale = 10.0f;
     static float rotaionSpeed = 5.0f;
 
     static float maxSpeed = 50.0f;
@@ -16,7 +15,7 @@ public class Fish : MonoBehaviour {
     static float seperateRadius = 5.0f;
     static float seperateStrength = 5.0f;
 
-    static float guideStrength = 36.0f;
+    static float guideStrength = 10;
     static float alignmentStrength = 1.0f;
     public Guide guide;
     public Renderer render;
@@ -77,15 +76,13 @@ public class Fish : MonoBehaviour {
         followTarget.Normalize();
 
         Vector3 randomVec = new Vector3(Random.value * 2 - 1, Random.value * 2 - 1, Random.value * 2 - 1);
-        Vector3 velocity =
+        nowVelocity =
             randomVec                        //亂數
             + guideStrength* followTarget    //況目標前進
             //+ alignmentStrength*alignment   //感覺作用不大  
             + cohesionStrength * cohesionVec //集中
             + seperateStrength * seperateVec;//分開
-
-        nowVelocity = velocity * velocityScale*Time.fixedDeltaTime;
-
+ 
         nowVelocityStrength = nowVelocity.magnitude;
 
         if (nowVelocityStrength > maxSpeed)
