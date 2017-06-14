@@ -14,16 +14,21 @@ public class Guide : MonoBehaviour {
 
     public Color[] colorList;
 
+    Vector3[] newVelocity;
     public List<Fish> list;
     // Use this for initialization
     Vector3 initPos;
     void Awake () {
+
+        newVelocity = new Vector3[count];
+
         list = new List<Fish>();
         for(int i = 0; i < count; i++){
             Fish fish =GameObject.Instantiate<Fish>(fishPrefab);
             fish.transform.position = transform.position+Random.Range(minR, maxR) *Random.onUnitSphere;
             fish.transform.rotation = transform.rotation;
             fish.guide = this;
+            fish.name = i.ToString();
 
             int index = (int)Random.Range(0, colorList.Length);
             fish.materail.color = colorList[index];
@@ -58,5 +63,21 @@ public class Guide : MonoBehaviour {
             tempCeterPos += fish.transform.position;
         }
         centerPos = tempCeterPos / count;
+
+        
+        //其實和「直接在Fish的FixedUPdate裡更新」沒什麼差別也
+        //重新計算
+        for (int i = 0; i < count; i++)
+        {
+            Fish fish = list[i];
+            newVelocity[i] = fish.calculusVelocity();
+        }
+
+        //更新
+        for (int i = 0; i < count; i++)
+        {
+            Fish fish = list[i];
+            fish.setVelocity(newVelocity[i]);
+        }
     }
 }

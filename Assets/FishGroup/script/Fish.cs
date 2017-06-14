@@ -21,7 +21,6 @@ public class Fish : MonoBehaviour {
     public Material materail;
 
     public Vector3 nowVelocity;
-    public float nowVelocityStrength;
     Rigidbody rigid;
     // Use this for initialization
     void Awake () {
@@ -30,24 +29,28 @@ public class Fish : MonoBehaviour {
     }
 
     Collider[] gs = new Collider[10];//大小看需求自己設定
-    static float findingGravitySensorR = 5;
+    static float nearRadius = 5;//調整這個值的大小，會出現不同的行為，因為沒辦法預期取得的gs是那些
 
-    public float cohesionStrengthScale;
-    void calculusVelocity()
+    Vector3 getCohesionVec()
     {
         Vector3 cohesionVec = (guide.centerPos - transform.position);
 
         //離中心點遠就遊快一點
-        float D = cohesionVec.magnitude;
-        cohesionStrengthScale = D / cohesionRadius;
+        float d = cohesionVec.magnitude;
+        float cohesionStrengthScale = d / cohesionRadius;
 
-        if(cohesionStrengthScale>1)//離太遠就加速
+        if (cohesionStrengthScale > 1)//離太遠就加速
             cohesionStrengthScale = Mathf.Pow(cohesionStrengthScale, 5);
 
-        cohesionVec = cohesionVec * (cohesionStrengthScale / D);
+        cohesionVec = cohesionVec * (cohesionStrengthScale / d);
+        return cohesionVec;
+    }
 
-        int layerMask = 1<<8;
-        int overlapCount = Physics.OverlapSphereNonAlloc(transform.position, findingGravitySensorR, gs, layerMask);
+    Vector3 getSeperateVec()
+    {
+
+        int layerMask = 1 << 8;
+        int overlapCount = Physics.OverlapSphereNonAlloc(transform.position, nearRadius, gs, layerMask);
 
         Vector3 seperateVec = Vector3.zero;
         for (int i = 0; i < overlapCount; i++)
@@ -55,7 +58,7 @@ public class Fish : MonoBehaviour {
             Transform neighborTransfrom = gs[i].transform;
             if (neighborTransfrom == transform)
                 continue;
-                
+
 
             Vector3 neighborPos = neighborTransfrom.position;
             Vector3 seperateDiff = transform.position - neighborPos;
@@ -63,44 +66,59 @@ public class Fish : MonoBehaviour {
             if (d < seperateRadius)
             {
                 //離中心愈近，strengthScale愈強
-                float seperateStrengthScale = ( 1.0f - d / seperateRadius)* guideStrength;//和guideStrength成正比
+                float seperateStrengthScale = (1.0f - d / seperateRadius) * guideStrength;//和guideStrength成正比
                 seperateVec += seperateDiff * (seperateStrengthScale / d);
             }
-            
+
         }
 
-        Vector3 followTarget = guide.transform.position - transform.position;
-        followTarget.Normalize();
+        return seperateVec;
+    }
 
+    Vector3 geGuideVec()
+    {
+        Vector3 guideVec = guide.transform.position - transform.position;
+        return guideVec.normalized;
+    }
+
+    public Vector3 calculusVelocity()
+    {
+        
         Vector3 randomVec = new Vector3(Random.value * 2 - 1, Random.value * 2 - 1, Random.value * 2 - 1);
-        nowVelocity =
+
+        Vector3 newVelocity =
             randomVec                        //亂數
-            + guideStrength* followTarget    //況目標前進
-            + cohesionStrength * cohesionVec //集中
-            + seperateStrength * seperateVec;//分開
- 
-        nowVelocityStrength = nowVelocity.magnitude;
+            + guideStrength * geGuideVec()    //況目標前進
+            + cohesionStrength * getCohesionVec() //集中
+            + seperateStrength * getSeperateVec();//分開
 
-        if (nowVelocityStrength > maxSpeed)
+
+        float newVelocityStrength = newVelocity.magnitude;
+
+        if (newVelocityStrength > maxSpeed)
         {
-            nowVelocity = nowVelocity * (maxSpeed / nowVelocityStrength);
-            nowVelocityStrength = maxSpeed;
+            newVelocity = newVelocity * (maxSpeed / newVelocityStrength);
+            newVelocityStrength = maxSpeed;
         }
 
-        if (nowVelocityStrength < minSpeed)
+        if (newVelocityStrength < minSpeed)
         {
-            nowVelocity = nowVelocity * (minSpeed / nowVelocityStrength);
-            nowVelocityStrength = minSpeed;
+            newVelocity = newVelocity * (minSpeed / newVelocityStrength);
+            newVelocityStrength = minSpeed;
         }
 
-        //Debug.DrawLine(transform.position, transform.position + nowVelocity, Color.blue);
-        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(nowVelocity), rotaionSpeed*Time.fixedDeltaTime);
-        rigid.velocity = nowVelocity;
+        return newVelocity;
+    }
+
+    public void setVelocity(Vector3 v)
+    {
+        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(v), rotaionSpeed * Time.fixedDeltaTime);
+        nowVelocity = v;
+        rigid.velocity = v;
     }
 	
 	// Update is called once per frame
 	void FixedUpdate () {
-        calculusVelocity();
-
+        //Debug.DrawLine(transform.position, transform.position + nowVelocity, Color.blue);
     }
 }
