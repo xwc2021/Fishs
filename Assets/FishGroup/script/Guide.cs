@@ -18,8 +18,12 @@ public class Guide : MonoBehaviour {
     public List<Fish> list;
     // Use this for initialization
     Vector3 initPos;
-    void Awake () {
 
+
+    public Transform followTarget;
+    public Transform myTail;
+    Vector3 recordTailPos;
+    void Awake () {
         newVelocity = new Vector3[count];
 
         list = new List<Fish>();
@@ -38,7 +42,9 @@ public class Guide : MonoBehaviour {
 
         initPos = transform.position;
 
-        StartCoroutine("WaitAndChangePos", 8.0F);
+        //StartCoroutine("WaitAndChangePos", 8.0F);
+        if(myTail!=null)
+            recordTailPos = myTail.position;
     }
 
     float sign = 1;
@@ -64,14 +70,17 @@ public class Guide : MonoBehaviour {
         }
         centerPos = tempCeterPos / count;
 
-        
+
         //其實和「直接在Fish的FixedUPdate裡更新」沒什麼差別也
         //重新計算
+        Vector3 tempVelocity = Vector3.zero;
         for (int i = 0; i < count; i++)
         {
             Fish fish = list[i];
             newVelocity[i] = fish.calculusVelocity();
+            tempVelocity += newVelocity[i];
         }
+        tempVelocity = tempVelocity / count;
 
         //更新
         for (int i = 0; i < count; i++)
@@ -79,5 +88,24 @@ public class Guide : MonoBehaviour {
             Fish fish = list[i];
             fish.setVelocity(newVelocity[i]);
         }
+
+        doFollow();
+        adjustMyTail(tempVelocity);
+    }
+
+    float followSpeed = 5.0f;
+    void doFollow()
+    {
+        if (followTarget != null)
+            transform.position = Vector3.Lerp(transform.position, followTarget.transform.position, followSpeed*Time.fixedDeltaTime);
+    }
+
+    float tailLen = 5;
+    void adjustMyTail(Vector3 dir)
+    {
+        if (myTail == null)
+            return;
+
+        myTail.transform.position = centerPos- tailLen*dir.normalized;
     }
 }
